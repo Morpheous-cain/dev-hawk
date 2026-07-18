@@ -58,32 +58,34 @@ export const useOfficerAssignments = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Real-time subscription for staff updates
+  // Fixed real-time subscription for staff updates
   useEffect(() => {
     if (!currentUserId) return;
 
-    const channel = supabase
-      .channel(`officer-${currentUserId}`)
+    // 1. Create the channel instance with unique suffix to avoid conflicts
+    // when multiple components use this hook simultaneously
+    const channelId = `officer-${currentUserId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const channel = supabase.channel(channelId);
+
+    // 2. Attach all listeners BEFORE calling subscribe()
+    channel
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'staff' }, 
-        () => {
-          refetchStaff();
-        }
+        () => refetchStaff()
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'patrols' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['assigned-patrols'] });
-        }
+        () => queryClient.invalidateQueries({ queryKey: ['assigned-patrols'] })
       )
       .on('postgres_changes',
         { event: '*', schema: 'public', table: 'dispatch_requests' },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ['assigned-dispatches'] });
-        }
-      )
-      .subscribe();
+        () => queryClient.invalidateQueries({ queryKey: ['assigned-dispatches'] })
+      );
 
+    // 3. Subscribe only after listeners are registered
+    channel.subscribe();
+
+    // 4. Clean up using removeChannel
     return () => {
       supabase.removeChannel(channel);
     };
