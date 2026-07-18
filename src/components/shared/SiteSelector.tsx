@@ -12,6 +12,9 @@ export interface Site {
   site_type: string | null;
   address: string;
   gps_coordinates: string | null;
+  gps_lat: number | null;
+  gps_lng: number | null;
+  geofence_radius_meters: number | null;
   client_id: string;
   client_name?: string;
 }
@@ -60,6 +63,9 @@ export const SiteSelector = ({
           site_type,
           address,
           gps_coordinates,
+          gps_lat,
+          gps_lng,
+          geofence_radius_meters,
           client_id,
           clients (
             legal_name
@@ -80,6 +86,9 @@ export const SiteSelector = ({
           site_type: site.site_type,
           address: site.address,
           gps_coordinates: site.gps_coordinates,
+          gps_lat: site.gps_lat,
+          gps_lng: site.gps_lng,
+          geofence_radius_meters: site.geofence_radius_meters,
           client_id: site.client_id,
           client_name: site.clients?.legal_name || 'Unknown Client'
         }));

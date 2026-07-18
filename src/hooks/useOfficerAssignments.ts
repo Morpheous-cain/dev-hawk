@@ -126,7 +126,15 @@ export const useOfficerAssignments = () => {
     queryKey: ["assigned-sites", staffRecord?.id],
     queryFn: async () => {
       if (!staffRecord?.current_site) return [];
-      return [staffRecord.current_site];
+
+      // current_site is a text field, try to find site by name or ID
+      const { data } = await supabase
+        .from("sites")
+        .select("id, site_name, client_id")
+        .or(`id.eq.${staffRecord.current_site},site_name.eq.${staffRecord.current_site}`)
+        .limit(1);
+
+      return data || [];
     },
     enabled: !!staffRecord,
   });

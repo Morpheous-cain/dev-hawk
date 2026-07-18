@@ -3354,6 +3354,9 @@ export type Database = {
           created_at: string | null
           created_by: string | null
           gps_coordinates: string | null
+          gps_lat: number | null
+          gps_lng: number | null
+          geofence_radius_meters: number | null
           id: string
           site_commander: string | null
           site_name: string
@@ -3366,6 +3369,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           gps_coordinates?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           site_commander?: string | null
           site_name: string
@@ -3378,6 +3384,9 @@ export type Database = {
           created_at?: string | null
           created_by?: string | null
           gps_coordinates?: string | null
+          gps_lat?: number | null
+          gps_lng?: number | null
+          geofence_radius_meters?: number | null
           id?: string
           site_commander?: string | null
           site_name?: string
@@ -3556,6 +3565,7 @@ export type Database = {
           current_site: string | null
           date_employed: string
           duty_category: string | null
+          email: string | null
           full_name: string
           id: string
           kra_pin: string | null
@@ -3574,6 +3584,7 @@ export type Database = {
           staff_id: string
           status: Database["public"]["Enums"]["staff_status"] | null
           updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           contract_type?: string | null
@@ -3583,6 +3594,7 @@ export type Database = {
           current_site?: string | null
           date_employed: string
           duty_category?: string | null
+          email?: string | null
           full_name: string
           id?: string
           kra_pin?: string | null
@@ -3601,6 +3613,7 @@ export type Database = {
           staff_id: string
           status?: Database["public"]["Enums"]["staff_status"] | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           contract_type?: string | null
@@ -3610,6 +3623,7 @@ export type Database = {
           current_site?: string | null
           date_employed?: string
           duty_category?: string | null
+          email?: string | null
           full_name?: string
           id?: string
           kra_pin?: string | null
@@ -3628,6 +3642,7 @@ export type Database = {
           staff_id?: string
           status?: Database["public"]["Enums"]["staff_status"] | null
           updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {

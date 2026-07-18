@@ -127,46 +127,30 @@ const OfficerClockScreen = () => {
 
   const fetchSites = async () => {
     try {
-      // Fetch sites with GPS coordinates from sites table (gps_coordinates is a text field like "lat,lng")
+      // Fetch sites with GPS coordinates from sites table (new GPS columns)
       const { data, error } = await supabase
         .from('sites')
         .select(`
           id,
           site_name,
           client_id,
-          gps_coordinates
+          gps_lat,
+          gps_lng,
+          geofence_radius_meters
         `)
         .order('site_name');
 
       if (!error && data && data.length > 0) {
-        // Parse GPS coordinates from gps_coordinates string (format: "lat,lng" or "POINT(lat lng)")
-        const parsedSites = data.map((s: any) => {
-          let gpsLat: number | null = null;
-          let gpsLng: number | null = null;
-
-          if (s.gps_coordinates) {
-            const coords = s.gps_coordinates.replace(/POINT\(|\)/g, '').split(/[, ]+/);
-            if (coords.length >= 2) {
-              // GPS coordinates can be in "lat,lng" or "POINT(lng lat)" format
-              const lat = parseFloat(coords[0]);
-              const lng = parseFloat(coords[1]);
-              if (!isNaN(lat) && !isNaN(lng)) {
-                gpsLat = lat;
-                gpsLng = lng;
-              }
-            }
-          }
-
-          return {
-            id: s.id,
-            name: s.site_name,
-            clientId: s.client_id,
-            clientName: null,
-            gpsLat,
-            gpsLng,
-            geofenceRadius: 100 // Default radius
-          };
-        });
+        // Use new GPS columns directly
+        const parsedSites = data.map((s: any) => ({
+          id: s.id,
+          name: s.site_name,
+          clientId: s.client_id,
+          clientName: null,
+          gpsLat: s.gps_lat,
+          gpsLng: s.gps_lng,
+          geofenceRadius: s.geofence_radius_meters || 100 // Default radius
+        }));
 
         setSites(parsedSites);
       } else {
