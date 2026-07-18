@@ -27,7 +27,7 @@ const AlarmSOSDesk = () => {
       // Fetch active SOS alerts with related data
       const { data: sosData } = await supabase
         .from('sos_alerts')
-        .select('*, vehicles(callsign, registration_number), profiles(full_name)')
+        .select('*, vehicles(callsign, registration_number), staff(full_name)')
         .in('status', ['active', 'responding'])
         .order('triggered_at', { ascending: false });
 
@@ -150,7 +150,7 @@ const AlarmSOSDesk = () => {
                   <div className="flex-1">
                     <h3 className="font-bold text-lg">{sos.alert_number}</h3>
                     <p className="text-sm text-muted-foreground">
-                      {sos.profiles?.full_name || 'Unknown Officer'}
+                      {sos.staff?.full_name || 'Unknown Officer'}
                     </p>
                     <p className="text-sm text-muted-foreground">
                       Vehicle: {sos.vehicles?.callsign || 'Unknown'}

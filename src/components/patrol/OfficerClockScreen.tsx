@@ -127,52 +127,67 @@ const OfficerClockScreen = () => {
 
   const fetchSites = async () => {
     try {
-      // Fetch sites with their client info for geofencing
+      // Fetch sites with GPS coordinates from sites table (gps_coordinates is a text field like "lat,lng")
       const { data, error } = await supabase
         .from('sites')
         .select(`
           id,
           site_name,
           client_id,
-          clients (
-            id,
-            legal_name,
-            gps_lat,
-            gps_lng,
-            geofence_radius_meters
-          )
+          gps_coordinates
         `)
         .order('site_name');
 
-      if (!error && data) {
-        setSites(data.map((s: any) => ({
-          id: s.id,
-          name: s.site_name,
-          clientId: s.client_id,
-          clientName: s.clients?.legal_name || null,
-          gpsLat: s.clients?.gps_lat || null,
-          gpsLng: s.clients?.gps_lng || null,
-          geofenceRadius: s.clients?.geofence_radius_meters || 50
-        })));
+      if (!error && data && data.length > 0) {
+        // Parse GPS coordinates from gps_coordinates string (format: "lat,lng" or "POINT(lat lng)")
+        const parsedSites = data.map((s: any) => {
+          let gpsLat: number | null = null;
+          let gpsLng: number | null = null;
+
+          if (s.gps_coordinates) {
+            const coords = s.gps_coordinates.replace(/POINT\(|\)/g, '').split(/[, ]+/);
+            if (coords.length >= 2) {
+              // GPS coordinates can be in "lat,lng" or "POINT(lng lat)" format
+              const lat = parseFloat(coords[0]);
+              const lng = parseFloat(coords[1]);
+              if (!isNaN(lat) && !isNaN(lng)) {
+                gpsLat = lat;
+                gpsLng = lng;
+              }
+            }
+          }
+
+          return {
+            id: s.id,
+            name: s.site_name,
+            clientId: s.client_id,
+            clientName: null,
+            gpsLat,
+            gpsLng,
+            geofenceRadius: 100 // Default radius
+          };
+        });
+
+        setSites(parsedSites);
       } else {
-        // Fallback to hardcoded sites if table doesn't exist
+        // Fallback to hardcoded sites if table is empty
         setSites([
-          { id: '1', name: 'Nairobi Hospital' },
-          { id: '2', name: 'Melili Hotel' },
-          { id: '3', name: 'Aks Restaurant' },
-          { id: '4', name: 'HQ Office' },
-          { id: '5', name: 'Westgate Mall' }
+          { id: '1', name: 'Nairobi Hospital', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+          { id: '2', name: 'Melili Hotel', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+          { id: '3', name: 'Aks Restaurant', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+          { id: '4', name: 'HQ Office', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+          { id: '5', name: 'Westgate Mall', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 }
         ]);
       }
     } catch (error) {
       console.error("Error fetching sites:", error);
       // Fallback sites
       setSites([
-        { id: '1', name: 'Nairobi Hospital' },
-        { id: '2', name: 'Melili Hotel' },
-        { id: '3', name: 'Aks Restaurant' },
-        { id: '4', name: 'HQ Office' },
-        { id: '5', name: 'Westgate Mall' }
+        { id: '1', name: 'Nairobi Hospital', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+        { id: '2', name: 'Melili Hotel', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+        { id: '3', name: 'Aks Restaurant', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+        { id: '4', name: 'HQ Office', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 },
+        { id: '5', name: 'Westgate Mall', clientId: null, clientName: null, gpsLat: null, gpsLng: null, geofenceRadius: 100 }
       ]);
     }
   };
@@ -324,14 +339,14 @@ const OfficerClockScreen = () => {
           if (validation.isValid) {
             setGeofenceStatus({
               status: 'valid',
-              message: `Within ${selectedSiteData.clientName || 'client'} geofence`,
+              message: `Within ${selectedSiteData.name} geofence`,
               distance: validation.distance
             });
             setGpsStatus('verified');
           } else {
             setGeofenceStatus({
               status: 'invalid',
-              message: `Outside ${selectedSiteData.clientName || 'client'} geofence by ${Math.round(validation.distance - (selectedSiteData.geofenceRadius || 50))}m`,
+              message: `Outside ${selectedSiteData.name} geofence by ${Math.round(validation.distance - (selectedSiteData.geofenceRadius || 50))}m`,
               distance: validation.distance
             });
             setGpsStatus('outside');

@@ -21,18 +21,21 @@ export const useOfficerAssignments = () => {
     queryKey: ["staff-record", currentUserId],
     queryFn: async () => {
       if (!currentUserId) return null;
-      
+
       // First try to find by user_id in staff table
-      // @ts-expect-error - Supabase types depth issue
-      const { data: staffByUserId } = await supabase
+      const { data: staffByUserId, error } = await supabase
         .from("staff")
         .select("*")
         .eq("user_id", currentUserId)
         .maybeSingle();
 
+      if (error) {
+        console.error("Error fetching staff by user_id:", error);
+      }
+
       if (staffByUserId) return staffByUserId;
 
-      // Then try matching by profile email
+      // Then try matching by profile email (fallback for existing records without user_id)
       const { data: profile } = await supabase
         .from("profiles")
         .select("email")
@@ -40,13 +43,12 @@ export const useOfficerAssignments = () => {
         .single();
 
       if (profile?.email) {
-        // @ts-expect-error - Supabase types depth issue
         const { data: staffByEmail } = await supabase
           .from("staff")
           .select("*")
           .eq("email", profile.email)
           .maybeSingle();
-        
+
         if (staffByEmail) return staffByEmail;
       }
 
