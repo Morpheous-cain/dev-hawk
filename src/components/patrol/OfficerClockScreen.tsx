@@ -57,7 +57,9 @@ const OfficerClockScreen = () => {
   const { user } = useAuth();
   const { staffRecord, assignedSites, isLoading: assignmentsLoading } = useOfficerAssignments();
   const officerId = staffRecord?.id;
-  const officerName = staffRecord?.full_name;
+  const officerName = staffRecord?.full_name || user?.email?.split('@')[0] || 'Unknown Officer';
+  const officerPosition = staffRecord?.position || 'Guard';
+  const officerStaffId = staffRecord?.staff_id || '—';
   const [scanning, setScanning] = useState(false);
   const [nonce, setNonce] = useState<NonceData | null>(null);
   const [ttlRemaining, setTtlRemaining] = useState(30);
@@ -110,20 +112,23 @@ const OfficerClockScreen = () => {
   // Load sites, GPS and history on mount
   useEffect(() => {
     if (assignmentsLoading) return;
+    // Always fetch sites (needed for dropdown), other calls need officerId
+    fetchSites();
     if (officerId) {
-      fetchSites();
       checkGPSLocation();
       fetchClockHistory();
       checkCurrentShiftStatus();
     }
   }, [assignmentsLoading, officerId]);
 
-  // Initialize selected site from assigned sites
+  // Initialize selected site from assigned sites, fallback to all sites
   useEffect(() => {
     if (assignedSites.length > 0 && !selectedSite) {
       setSelectedSite(assignedSites[0].id);
+    } else if (sites.length > 0 && !selectedSite) {
+      setSelectedSite(sites[0].id);
     }
-  }, [assignedSites, selectedSite]);
+  }, [assignedSites, sites, selectedSite]);
 
   const fetchSites = async () => {
     try {
@@ -381,12 +386,12 @@ const OfficerClockScreen = () => {
         return;
       }
       if (!officerId) {
-        toast.error("Officer not identified");
+        toast.error("Officer not identified. Please contact admin to link your account to a staff record.");
         return;
       }
     } else if (action === 'clock_out') {
       if (!officerId) {
-        toast.error("Officer not identified");
+        toast.error("Officer not identified. Please contact admin to link your account to a staff record.");
         return;
       }
     }
@@ -701,10 +706,10 @@ const OfficerClockScreen = () => {
               <div className="mt-1 p-3 bg-muted/30 rounded-lg border border-muted/20 flex items-center gap-3">
                 <User className="h-5 w-5 text-muted-foreground" />
                 <div className="flex-1">
-                  <p className="font-medium">{officerName || 'Unknown Officer'}</p>
-                  <p className="text-xs text-muted-foreground">{staffRecord?.position || 'Guard'}</p>
+                  <p className="font-medium">{officerName}</p>
+                  <p className="text-xs text-muted-foreground">{officerPosition}</p>
                 </div>
-                <Badge variant="outline" className="text-xs">{staffRecord?.staff_id || '—'}</Badge>
+                <Badge variant="outline" className="text-xs">{officerStaffId}</Badge>
               </div>
             </div>
             <div className="flex gap-2 items-end">
